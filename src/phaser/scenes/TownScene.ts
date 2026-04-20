@@ -9,6 +9,12 @@ import { TownSceneBridge, type ActorView } from "../adapters/sceneBridge";
 import { configureFollowCamera } from "../view/camera/followCamera";
 import { getAnimationName } from "../view/sprites/animationFactory";
 
+const AUDIO_DEFAULT_VOLUMES = {
+  bgm: 0.24,
+  interact: 0.46,
+  running: 0.2,
+} as const;
+
 export class TownScene extends Phaser.Scene {
   private readonly simulation: TownSimulation;
   private bindings?: KeyboardBindings;
@@ -23,6 +29,8 @@ export class TownScene extends Phaser.Scene {
   }
 
   create(): void {
+    const textResolution = Math.min(window.devicePixelRatio || 1, 2);
+
     this.add
       .image(
         WORLD_CONFIG.background.x,
@@ -71,22 +79,21 @@ export class TownScene extends Phaser.Scene {
 
         const nameLabel = this.add
           .text(npcState.position.x, npcState.position.y - 76, npcState.name, {
-            color: "#f8e8a2",
+            color: "#fdf4cf",
             fontFamily: '"Avenir Next", "PingFang SC", sans-serif',
             fontSize: "18px",
             fontStyle: "700",
-            stroke: "#0d1418",
-            strokeThickness: 5,
             align: "center",
           })
+          .setResolution(textResolution)
           .setOrigin(0.5);
 
         const dialogueLabel = this.add
-          .text(npcState.position.x - 56, npcState.position.y - 118, "", {
+          .text(npcState.position.x, npcState.position.y - 118, "", {
             color: "#ecf4f2",
-            backgroundColor: "rgba(7, 15, 18, 0.84)",
             fontFamily: '"Avenir Next", "PingFang SC", sans-serif',
             fontSize: "14px",
+            align: "left",
             padding: {
               x: 10,
               y: 8,
@@ -96,6 +103,14 @@ export class TownScene extends Phaser.Scene {
               useAdvancedWrap: true,
             },
           })
+          .setResolution(textResolution)
+          .setOrigin(0.5, 1)
+          .setVisible(false);
+
+        const nameBubble = this.add.graphics().setDepth(npcState.position.y + 999);
+        const dialogueBubble = this.add
+          .graphics()
+          .setDepth(npcState.position.y + 1001)
           .setVisible(false);
 
         return [
@@ -103,37 +118,17 @@ export class TownScene extends Phaser.Scene {
           {
             actorKey: spriteDefinition.key,
             sprite,
+            nameBubble,
             nameLabel,
+            dialogueBubble,
             dialogueLabel,
           } satisfies ActorView,
         ];
       }),
     ) as Record<string, ActorView>;
 
-    const promptText = this.add
-      .text(WORLD_CONFIG.width / 2, WORLD_CONFIG.height - 40, "", {
-        color: "#f7ecd5",
-        backgroundColor: "rgba(10, 20, 24, 0.82)",
-        fontFamily: '"Avenir Next", "PingFang SC", sans-serif',
-        fontSize: "18px",
-        padding: {
-          x: 12,
-          y: 8,
-        },
-      })
-      .setScrollFactor(0)
-      .setOrigin(0.5)
-      .setDepth(5000)
-      .setVisible(false);
-
     this.bindings = new KeyboardBindings(this);
-    this.bridge = new TownSceneBridge(
-      this,
-      this.simulation,
-      playerView,
-      npcViews,
-      promptText,
-    );
+    this.bridge = new TownSceneBridge(this, this.simulation, playerView, npcViews);
 
     configureFollowCamera(
       this,
@@ -176,14 +171,14 @@ export class TownScene extends Phaser.Scene {
   private createAudio(): void {
     this.bgm = this.sound.add(STATIC_ASSETS.bgm.key, {
       loop: true,
-      volume: 0.42,
+      volume: AUDIO_DEFAULT_VOLUMES.bgm,
     });
     this.interactSound = this.sound.add(STATIC_ASSETS.interact.key, {
-      volume: 0.65,
+      volume: AUDIO_DEFAULT_VOLUMES.interact,
     });
     this.runningSound = this.sound.add(STATIC_ASSETS.running.key, {
       loop: true,
-      volume: 0.32,
+      volume: AUDIO_DEFAULT_VOLUMES.running,
     });
 
     const unlockAudio = (): void => {
@@ -195,6 +190,7 @@ export class TownScene extends Phaser.Scene {
     if (this.sound.locked) {
       this.input.once("pointerdown", unlockAudio);
       this.input.keyboard?.once("keydown", unlockAudio);
+      window.addEventListener("pointerdown", unlockAudio, { once: true });
     } else {
       unlockAudio();
     }

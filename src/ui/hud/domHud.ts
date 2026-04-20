@@ -3,20 +3,36 @@ import { TownSimulation } from "../../game/simulation/systems/TownSimulation";
 
 const formatStatusMode = (connected: boolean, usingFallback: boolean): string => {
   if (connected) {
-    return "后端在线";
+    return "在线";
   }
   if (usingFallback) {
-    return "本地兜底";
+    return "本地";
   }
   return "等待连接";
+};
+
+const supportsTouchControls = (): boolean =>
+  window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
+
+const createTouchButton = (label: string, action: string): HTMLButtonElement => {
+  const button = document.createElement("button");
+  button.className = "touch-button";
+  button.type = "button";
+  button.textContent = label;
+  button.dataset.touchControl = action;
+  return button;
 };
 
 export const createHud = (
   mountPoint: HTMLElement,
   simulation: TownSimulation,
 ): void => {
+  const touchEnabled = supportsTouchControls();
   const hudLayer = document.createElement("div");
   hudLayer.className = "hud-layer";
+  if (touchEnabled) {
+    hudLayer.classList.add("touch-enabled");
+  }
 
   const statusPanel = document.createElement("section");
   statusPanel.className = "status-panel";
@@ -26,7 +42,7 @@ export const createHud = (
 
   const statusTitle = document.createElement("h1");
   statusTitle.className = "status-title";
-  statusTitle.textContent = "赛博小镇 Phaser 版";
+  statusTitle.textContent = "赛博小镇";
 
   const statusSummary = document.createElement("p");
   statusSummary.className = "status-summary";
@@ -81,7 +97,33 @@ export const createHud = (
     composer,
   );
 
-  hudLayer.append(statusPanel, dialoguePanel);
+  const interactionPrompt = document.createElement("div");
+  interactionPrompt.className = "interaction-prompt is-hidden";
+
+  const touchControls = document.createElement("section");
+  touchControls.className = "touch-controls";
+  touchControls.setAttribute("aria-label", "触屏控制区");
+
+  const touchPad = document.createElement("div");
+  touchPad.className = "touch-pad";
+  touchPad.append(
+    createTouchButton("▲", "move-up"),
+    createTouchButton("◀", "move-left"),
+    createTouchButton("▶", "move-right"),
+    createTouchButton("▼", "move-down"),
+  );
+
+  const touchActions = document.createElement("div");
+  touchActions.className = "touch-actions";
+  const interactButton = createTouchButton("交互", "interact");
+  interactButton.classList.add("action");
+  const closeTouchButton = createTouchButton("关闭", "close");
+  closeTouchButton.classList.add("action", "secondary");
+  touchActions.append(interactButton, closeTouchButton);
+
+  touchControls.append(touchPad, touchActions);
+
+  hudLayer.append(statusPanel, dialoguePanel, interactionPrompt, touchControls);
   mountPoint.append(hudLayer);
 
   let draftValue = "";
@@ -89,6 +131,15 @@ export const createHud = (
   let wasDialogueOpen = false;
   let previousActiveNpcId: string | null = null;
   let renderedNpcId: string | null = null;
+
+  const updateCompactMode = (): void => {
+    const rect = mountPoint.getBoundingClientRect();
+    const compact = rect.width <= 600 || rect.height <= 460;
+    const ultraCompact = rect.width <= 430 || rect.height <= 390;
+
+    hudLayer.classList.toggle("compact-mobile", compact);
+    hudLayer.classList.toggle("ultra-compact-mobile", ultraCompact);
+  };
 
   const scrollMessagesToBottom = (): void => {
     window.requestAnimationFrame(() => {
@@ -158,10 +209,6 @@ export const createHud = (
     const activeNpc = state.dialogue.npcId
       ? NPC_DEFINITIONS_BY_ID[state.dialogue.npcId]
       : null;
-    const secondsUntilRefresh = Math.max(
-      0,
-      Math.ceil((state.backend.nextStatusRefreshAt - state.time) / 1000),
-    );
 
     statusBadge.textContent = formatStatusMode(
       state.backend.connected,
@@ -174,25 +221,40 @@ export const createHud = (
         : "pending";
 
     statusSummary.textContent = nearbyNpc
-      ? `当前可交互 NPC：${nearbyNpc.name}，按 E 开始对话。`
-      : "四向移动探索办公室，靠近 NPC 后按 E 触发对话。";
+      ? touchEnabled
+        ? `可交互：${nearbyNpc.name}（点交互）`
+        : `可交互：${nearbyNpc.name}（按 E）`
+      : touchEnabled
+        ? "靠近 NPC 后点交互"
+        : "靠近 NPC 后按 E";
 
-    statusMeta.textContent = `状态轮询 ${secondsUntilRefresh}s · 接口 ${state.backend.apiBaseUrl}`;
+    interactionPrompt.textContent = nearbyNpc
+      ? touchEnabled
+        ? `点交互 与 ${nearbyNpc.name} 对话`
+        : `按 E 与 ${nearbyNpc.name} 对话`
+      : "";
+    interactionPrompt.classList.toggle(
+      "is-hidden",
+      !nearbyNpc || state.dialogue.open,
+    );
+
+    statusMeta.textContent = "";
     statusError.textContent = state.backend.lastError
-      ? `提示：${state.backend.lastError}`
-      : "后端负责聊天、记忆、好感度和 NPC 状态轮询。";
+      ? `后端异常：${state.backend.lastError}`
+      : "";
+    statusPanel.classList.toggle("has-error", Boolean(state.backend.lastError));
 
     dialoguePanel.classList.toggle("is-hidden", !state.dialogue.open);
     dialogueName.textContent = activeNpc ? activeNpc.name : "未选中 NPC";
     dialogueTitle.textContent = activeNpc
       ? activeNpc.title
-      : "靠近任意 NPC 后按 E 打开对话";
+      : `与 NPC 交互：${touchEnabled ? '点交互':'按E'}`;
 
     composerNote.textContent = state.dialogue.sending
-      ? "正在等待回复…"
+      ? "等待回复…"
       : activeNpc
-        ? `和 ${activeNpc.name} 聊聊他今天在做什么。`
-        : "打开对话后即可发送消息。";
+        ? `与 ${activeNpc.name} 对话中`
+        : "发送消息";
 
     sendButton.disabled = state.dialogue.sending || draftValue.trim() === "";
     input.disabled = !state.dialogue.open;
@@ -203,6 +265,7 @@ export const createHud = (
     }
 
     renderMessages();
+    hudLayer.classList.toggle("dialogue-open", state.dialogue.open);
 
     if (
       state.dialogue.open &&
@@ -247,6 +310,15 @@ export const createHud = (
   closeButton.addEventListener("click", () => {
     simulation.closeDialogue();
   });
+
+  updateCompactMode();
+  if (typeof ResizeObserver !== "undefined") {
+    const observer = new ResizeObserver(() => {
+      updateCompactMode();
+    });
+    observer.observe(mountPoint);
+  }
+  window.addEventListener("resize", updateCompactMode);
 
   simulation.subscribe(render);
   render();

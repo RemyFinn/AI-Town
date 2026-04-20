@@ -29,6 +29,56 @@ if (!gameRoot || !gameStage) {
   throw new Error("游戏挂载节点初始化失败。");
 }
 
+const isTouchMobile = (): boolean =>
+  (window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0) &&
+  Math.min(window.innerWidth, window.innerHeight) <= 900;
+
+const tryLockLandscape = async (allowFullscreen: boolean): Promise<void> => {
+  if (!isTouchMobile()) {
+    return;
+  }
+
+  const orientationApi = screen.orientation;
+  if (!orientationApi?.lock) {
+    return;
+  }
+
+  try {
+    await orientationApi.lock("landscape");
+    return;
+  } catch {
+    if (
+      !allowFullscreen ||
+      !document.fullscreenEnabled ||
+      document.fullscreenElement
+    ) {
+      return;
+    }
+  }
+
+  try {
+    await document.documentElement.requestFullscreen({ navigationUI: "hide" });
+    await orientationApi.lock("landscape");
+  } catch {
+  }
+};
+
+void tryLockLandscape(false);
+window.addEventListener(
+  "pointerdown",
+  () => {
+    void tryLockLandscape(true);
+  },
+  { once: true },
+);
+window.addEventListener(
+  "touchstart",
+  () => {
+    void tryLockLandscape(true);
+  },
+  { once: true, passive: true },
+);
+
 const simulation = new TownSimulation(new TownBackendClient());
 createHud(gameStage, simulation);
 void simulation.initialize();
@@ -39,14 +89,19 @@ const game = new Phaser.Game({
   width: WORLD_CONFIG.width,
   height: WORLD_CONFIG.height,
   backgroundColor: "#081216",
-  pixelArt: true,
+  antialias: true,
+  antialiasGL: true,
+  pixelArt: false,
+  roundPixels: true,
   scene: [new BootScene(), new TownScene(simulation)],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
+    autoRound: true,
     width: WORLD_CONFIG.width,
     height: WORLD_CONFIG.height,
   },
+  banner: false,
 });
 
 window.addEventListener("beforeunload", () => {

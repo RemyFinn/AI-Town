@@ -71,7 +71,7 @@ export class TownBackendClient {
       return {
         dialogues,
         source: payload.dialogues ? "backend" : "fallback",
-        error: payload.dialogues ? undefined : "后端未返回 NPC 状态，已切换到本地兜底。",
+        error: payload.dialogues ? undefined : "后端未返回 NPC 状态，已切换到本地。",
       };
     } catch (error) {
       return {
@@ -99,7 +99,7 @@ export class TownBackendClient {
         return {
           message: this.getFallbackChat(npcName, message),
           source: "fallback",
-          error: "后端未返回对话内容，已使用本地兜底回复。",
+          error: "后端未返回对话内容，已使用本地回复。",
         };
       }
 

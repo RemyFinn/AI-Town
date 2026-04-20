@@ -30,7 +30,7 @@ export const WORLD_CONFIG = {
   npcStatusRefreshIntervalMs: 30_000,
   playerFootprint: { width: 26, height: 18 },
   npcFootprint: { width: 24, height: 16 },
-  cameraZoom: 1.08,
+  cameraZoom: 1,
   background: {
     x: 644.49994,
     y: 371.25,

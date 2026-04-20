@@ -9,12 +9,14 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload(): void {
+    const textResolution = Math.min(window.devicePixelRatio || 1, 2);
     const loadingText = this.add
       .text(640, 360, "正在加载 Phaser 客户端…", {
         color: "#f2efe8",
         fontFamily: '"Avenir Next", "PingFang SC", sans-serif',
         fontSize: "28px",
       })
+      .setResolution(textResolution)
       .setOrigin(0.5);
 
     this.load.on("progress", (value: number) => {

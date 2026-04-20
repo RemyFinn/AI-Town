@@ -11,5 +11,5 @@ export const configureFollowCamera = (
   camera.setBounds(0, 0, worldWidth, worldHeight);
   camera.startFollow(target, true, 0.08, 0.08);
   camera.setZoom(zoom);
-  camera.setRoundPixels(false);
+  camera.setRoundPixels(true);
 };
