@@ -1,6 +1,6 @@
 # Phaser 迁移分析
 
-这个项目的 `wiki` 文档明确了一个很清晰的职责边界：
+迁移前的项目有一个很清晰的职责边界：
 
 - Godot 客户端负责移动、交互、UI 展示和 HTTP 调用。
 - FastAPI 后端负责 `/chat`、`/npcs/status`、记忆系统、好感度系统和批量状态生成。
@@ -20,12 +20,14 @@
 - `src/ui/hud/domHud.ts`
   - 负责 DOM 版对话面板和顶部状态栏。
 
-## 复用的 Godot 资源
+## 迁移后的 Web 资源
 
-- 角色精灵：`helloagents-ai-town/assets/characters/character_1.png` 到 `character_4.png`
-- 场景底图：`helloagents-ai-town/assets/interiors/Japanese_Home_1_preview_48x48.png`
-- 装饰图：`helloagents-ai-town/assets/interiors/小鲸鱼.png`
-- 音频：`helloagents-ai-town/assets/audio/BGM.ogg`、`Running.mp3`、`interact.mp3`
+- 角色精灵：`src/game/assets/files/characters/character_1.png` 到 `character_4.png`
+- 场景底图：`src/game/assets/files/interiors/Japanese_Home_1_preview_48x48.png`
+- 装饰图：`src/game/assets/files/interiors/小鲸鱼.png`
+- 音频：`src/game/assets/files/audio/BGM.ogg`、`Running.mp3`、`interact.mp3`
+
+这些资源从原 Godot 工程中迁移而来；Phaser 分支不再依赖 `helloagents-ai-town/` 目录，运行时资源由 manifest 统一注册。
 
 ## 保留的玩法行为
 

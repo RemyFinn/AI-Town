@@ -1,12 +1,12 @@
-import bgmAudio from "../../../helloagents-ai-town/assets/audio/BGM.ogg";
-import runningAudio from "../../../helloagents-ai-town/assets/audio/Running.mp3";
-import interactAudio from "../../../helloagents-ai-town/assets/audio/interact.mp3";
-import playerSheet from "../../../helloagents-ai-town/assets/characters/character_1.png";
-import npcZhangSheet from "../../../helloagents-ai-town/assets/characters/character_2.png";
-import npcLiSheet from "../../../helloagents-ai-town/assets/characters/character_3.png";
-import npcWangSheet from "../../../helloagents-ai-town/assets/characters/character_4.png";
-import officeBackground from "../../../helloagents-ai-town/assets/interiors/Japanese_Home_1_preview_48x48.png";
-import whaleDecoration from "../../../helloagents-ai-town/assets/interiors/小鲸鱼.png";
+import bgmAudio from "./files/audio/BGM.ogg";
+import runningAudio from "./files/audio/Running.mp3";
+import interactAudio from "./files/audio/interact.mp3";
+import playerSheet from "./files/characters/character_1.png";
+import npcZhangSheet from "./files/characters/character_2.png";
+import npcLiSheet from "./files/characters/character_3.png";
+import npcWangSheet from "./files/characters/character_4.png";
+import officeBackground from "./files/interiors/Japanese_Home_1_preview_48x48.png";
+import whaleDecoration from "./files/interiors/小鲸鱼.png";
 
 export type ActorAnimationKey =
   | "idle"
