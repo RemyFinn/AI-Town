@@ -7,7 +7,7 @@
 - `src/`：Phaser Web 客户端、游戏状态、输入和 HUD。
 - `src/game/assets/files/`：Web 客户端运行需要的贴图和音频资源。
 - `backend/`：FastAPI 后端，负责 NPC 状态、对话、记忆和好感度接口。
-- `docs/phaser-migration.md`：Phaser 迁移说明。
+- `docs/phaser-migration.md`：Phaser 架构说明。
 
 ## 快速启动
 
@@ -47,7 +47,7 @@ npm run preview
 ## 相关文档
 
 - [安装配置指南](SETUP_GUIDE.md)
-- [Phaser 迁移分析](docs/phaser-migration.md)
+- [Phaser 架构说明](docs/phaser-migration.md)
 - [对话日志系统](DIALOGUE_LOG_GUIDE.md)
 - [好感度系统](AFFINITY_SYSTEM_GUIDE.md)
 - [记忆系统](MEMORY_SYSTEM_GUIDE.md)

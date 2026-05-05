@@ -1,13 +1,13 @@
-# Phaser 迁移分析
+# Phaser 架构说明
 
-迁移前的项目有一个很清晰的职责边界：
+当前 Phaser 分支有一个很清晰的职责边界：
 
-- Godot 客户端负责移动、交互、UI 展示和 HTTP 调用。
+- Phaser + TypeScript + Vite 客户端负责移动、交互、UI 展示和 HTTP 调用。
 - FastAPI 后端负责 `/chat`、`/npcs/status`、记忆系统、好感度系统和批量状态生成。
 
-基于这个结构，这次 Phaser 迁移没有去重写后端，而是把原来的 Godot 客户端替换成一个 `Phaser + TypeScript + Vite` Web 客户端，并继续复用现有后端接口。
+Phaser 客户端继续复用现有后端接口，前端侧专注处理游戏渲染、输入、HUD 和本地交互状态。
 
-## 迁移后的结构
+## 客户端结构
 
 - `src/game/simulation/systems/TownSimulation.ts`
   - 负责玩家/NPC 状态、四向移动、闲逛、交互距离、状态轮询和对话流程。
@@ -20,14 +20,14 @@
 - `src/ui/hud/domHud.ts`
   - 负责 DOM 版对话面板和顶部状态栏。
 
-## 迁移后的 Web 资源
+## Web 资源
 
 - 角色精灵：`src/game/assets/files/characters/character_1.png` 到 `character_4.png`
 - 场景底图：`src/game/assets/files/interiors/Japanese_Home_1_preview_48x48.png`
 - 装饰图：`src/game/assets/files/interiors/小鲸鱼.png`
 - 音频：`src/game/assets/files/audio/BGM.ogg`、`Running.mp3`、`interact.mp3`
 
-这些资源从原 Godot 工程中迁移而来；Phaser 分支不再依赖 `helloagents-ai-town/` 目录，运行时资源由 manifest 统一注册。
+这些资源由 Phaser 分支直接维护，运行时资源由 manifest 统一注册。
 
 ## 保留的玩法行为
 
