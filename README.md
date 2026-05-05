@@ -1,6 +1,6 @@
 # 赛博小镇 - Phaser 分支
 
-这是 `Helloagents-AI-Town` 的 Phaser Web 客户端分支。当前分支保留 `Phaser + TypeScript + Vite` 客户端和共用 FastAPI 后端，Godot 工程已移到 `godot` 分支维护。
+这是 `Helloagents-AI-Town` 的 Phaser Web 客户端分支。当前分支保留 `Phaser + TypeScript + Vite` 客户端和共用 FastAPI 后端。
 
 ## 项目结构
 
@@ -52,7 +52,6 @@ npm run preview
 - [好感度系统](AFFINITY_SYSTEM_GUIDE.md)
 - [记忆系统](MEMORY_SYSTEM_GUIDE.md)
 
-## 分支说明
+## 当前分支
 
-- `godot`：Godot 4.x 客户端 + FastAPI 后端。
-- `phaser`：Phaser + TypeScript + Vite Web 客户端 + FastAPI 后端。
+当前分支专注维护 Phaser + TypeScript + Vite Web 客户端和 FastAPI 后端。
