@@ -1,64 +1,55 @@
-# 赛博小镇 - AI NPC对话系统
+# 赛博小镇 - Godot 分支
 
-基于HelloAgents框架的AI小镇模拟游戏,展示多智能体系统在游戏中的应用。
+这是 `Helloagents-AI-Town` 的 Godot 客户端分支。当前分支保留原 Godot 4.x 项目和共用 FastAPI 后端，适合继续维护桌面端/原生 Godot 版本。
 
-当前仓库已经补充了一个 `Phaser + TypeScript + Vite` Web 客户端,并继续复用原有 FastAPI 后端。原 `Godot` 项目文件保留在 `helloagents-ai-town/` 中,作为资源和场景参考来源。
+## 项目结构
 
-## 🎮 功能特性
+- `helloagents-ai-town/`：Godot 4.x 工程目录，包含场景、脚本和游戏资源。
+- `backend/`：FastAPI 后端，负责 NPC 状态、对话、记忆和好感度接口。
+- `docs/`：项目架构和维护文档。
 
-- ✅ 3个AI NPC (张三、李四、王五)
-- ✅ 智能对话系统
-- ✅ 记忆系统 (短期+长期记忆)
-- ✅ 好感度系统 (5个等级)
-- ✅ NPC自主行为 (闲逛、工作)
-- ✅ 完整的日志系统
-
-## 🛠️ 技术栈
-
-- **Web客户端:** Phaser 4 + TypeScript + Vite
-- **原始客户端资源来源:** Godot 4.x
-- **后端框架:** FastAPI + Python 3.10+
-- **AI框架:** HelloAgents
-- **LLM:** OpenAI GPT-4 (可配置其余的LLM服务)
-
-## 📦 快速开始
+## 快速启动
 
 ### 1. 启动后端
 
 ```bash
 cd backend
-./venv/bin/python main.py
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python main.py
 ```
 
-如果没有配置 `LLM_API_KEY`, 后端会自动进入模拟/预设对话模式,项目仍可运行。
+如果没有配置 `LLM_API_KEY`，后端会自动进入模拟/预设对话模式，项目仍可运行。
 
-### 2. 启动 Phaser 前端
+默认后端地址：
 
-```bash
-npm install
-npm run dev
-```
+- API: `http://127.0.0.1:8000`
+- 文档: `http://127.0.0.1:8000/docs`
 
-默认访问地址:
+### 2. 打开 Godot 项目
 
-- Web客户端: `http://127.0.0.1:5173`
-- 后端接口: `http://127.0.0.1:8000`
+1. 启动 Godot 4.x。
+2. 点击“导入”。
+3. 选择 `helloagents-ai-town/project.godot`。
+4. 打开项目后按 `F5` 运行。
 
-更多说明详见 [SETUP_GUIDE.md](SETUP_GUIDE.md)
+## 操作
 
-## 📚 文档
+- `WASD`：移动玩家
+- `E`：与 NPC 交互
+- `Enter`：发送消息
+- `Esc`：关闭对话框
+
+## 相关文档
 
 - [安装配置指南](SETUP_GUIDE.md)
 - [对话日志系统](DIALOGUE_LOG_GUIDE.md)
 - [好感度系统](AFFINITY_SYSTEM_GUIDE.md)
 - [记忆系统](MEMORY_SYSTEM_GUIDE.md)
-- [Code Wiki（拆分版入口）](docs/code-wiki/README.md)
-- [Phaser迁移分析](docs/phaser-migration.md)
+- [Code Wiki](docs/code-wiki/README.md)
 
-## 📖 教程
+## 分支说明
 
-本项目是《Hello-agents》教材第15章的配套案例。
-
-## 📄 许可证
-
-CC BY-NC-SA 4.0
+- `godot`：Godot 4.x 客户端 + FastAPI 后端。
+- `phaser`：Phaser + TypeScript + Vite Web 客户端 + FastAPI 后端。
