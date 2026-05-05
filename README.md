@@ -49,7 +49,6 @@ python main.py
 - [记忆系统](MEMORY_SYSTEM_GUIDE.md)
 - [Code Wiki](docs/code-wiki/README.md)
 
-## 分支说明
+## 当前分支
 
-- `godot`：Godot 4.x 客户端 + FastAPI 后端。
-- `phaser`：Phaser + TypeScript + Vite Web 客户端 + FastAPI 后端。
+当前分支专注维护 Godot 4.x 客户端和 FastAPI 后端。
