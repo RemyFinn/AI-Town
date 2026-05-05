@@ -215,10 +215,10 @@ python main.py
    - 发送第二条消息: "还记得我刚才问你什么吗?"
    - 查看记忆列表: GET /npcs/张三/memories
 
-### 方法3: 在Godot中测试
+### 方法3: 在 Phaser Web 客户端中测试
 
 1. 启动后端服务
-2. 运行Godot游戏
+2. 运行 `npm run dev` 启动 Phaser Web 客户端
 3. 与NPC对话多次
 4. 观察NPC是否能记住之前的对话
 
@@ -374,4 +374,3 @@ rm -rf backend/memory_data/张三
 - 完善NPC交互体验
 
 ---
-
