@@ -36,7 +36,7 @@ DEPLOY_USER=ubuntu
 APP_DIR=/opt/ai-town
 SSH_PRIVATE_KEY=<private deploy key>
 VITE_API_BASE_URL=/api
-VITE_ASSET_BASE_URL=https://your-bucket.oss-cn-region.aliyuncs.com/assets/files
+VITE_ASSET_BASE_URL=/assets/files
 ```
 
 Optional but recommended:
@@ -65,30 +65,28 @@ Backend API: http://your-domain.com/api/
 
 ## 5. Upload game assets to OSS
 
-Upload local assets to OSS before enabling the production frontend:
+The deployment keeps game assets out of Git. Upload them once to the server's shared static directory:
 
 ```bash
-ossutil cp -r src/game/assets/files/ oss://your-bucket/assets/files/ --update
+rsync -av src/game/assets/files/ ubuntu@your-server-ip:/opt/ai-town/shared/assets/files/
 ```
 
-The public URL must match `VITE_ASSET_BASE_URL`. For example:
+The server bootstrap config exposes that directory through Nginx:
 
 ```text
-VITE_ASSET_BASE_URL=https://your-bucket.oss-cn-region.aliyuncs.com/assets/files
+VITE_ASSET_BASE_URL=/assets/files
 ```
 
 The resulting files should be reachable at URLs like:
 
 ```text
-https://your-bucket.oss-cn-region.aliyuncs.com/assets/files/audio/BGM.ogg
-https://your-bucket.oss-cn-region.aliyuncs.com/assets/files/characters/character_1.png
+http://your-domain.com/assets/files/audio/BGM.ogg
+http://your-domain.com/assets/files/characters/character_1.png
 ```
-
-If the frontend domain is different from the OSS domain, configure OSS CORS to allow `GET` and `HEAD` from the frontend domain.
 
 ## Notes
 
 - The frontend is built with `VITE_API_BASE_URL=/api` by default, so the browser calls the backend through the same domain.
-- Game assets are loaded from `VITE_ASSET_BASE_URL`. Upload the contents of `src/game/assets/files/` to the same path on OSS, preserving the `audio/`, `characters/`, and `interiors/` directories.
+- Game assets are loaded from `VITE_ASSET_BASE_URL`. Upload the contents of `src/game/assets/files/` to `/opt/ai-town/shared/assets/files/`, preserving the `audio/`, `characters/`, and `interiors/` directories.
 - Backend secrets should stay on the server in `/opt/ai-town/shared/backend.env`, not in the frontend or repository.
 - Add HTTPS after the first successful HTTP deployment, for example with Certbot.

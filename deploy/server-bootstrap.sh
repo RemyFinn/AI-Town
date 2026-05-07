@@ -16,7 +16,7 @@ apt-get install -y --no-install-recommends nginx python3 python3-venv python3-pi
 
 id "$DEPLOY_USER" >/dev/null
 
-mkdir -p "${APP_DIR}/releases" "${APP_DIR}/shared"
+mkdir -p "${APP_DIR}/releases" "${APP_DIR}/shared/assets/files"
 chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "${APP_DIR}"
 
 if [[ ! -f "${APP_DIR}/shared/backend.env" ]]; then
@@ -67,6 +67,14 @@ server {
 
     location / {
         try_files \$uri \$uri/ /index.html;
+    }
+
+    location /assets/files/ {
+        alias ${APP_DIR}/shared/assets/files/;
+        try_files \$uri =404;
+        access_log off;
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000";
     }
 
     location /api/ {

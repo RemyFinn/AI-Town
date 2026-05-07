@@ -5,7 +5,7 @@
 ## 项目结构
 
 - `src/`：Phaser Web 客户端、游戏状态、输入和 HUD。
-- `src/game/assets/files/`：Web 客户端本地资源源文件；生产部署建议上传到 OSS，并通过 `VITE_ASSET_BASE_URL` 指向资源目录。
+- `src/game/assets/files/`：Web 客户端本地资源源文件；生产部署建议上传到服务器静态目录，并通过 `VITE_ASSET_BASE_URL` 指向资源目录。
 - `backend/`：FastAPI 后端，负责 NPC 状态、对话、记忆和好感度接口。
 - `docs/phaser-migration.md`：Phaser 架构说明。
 

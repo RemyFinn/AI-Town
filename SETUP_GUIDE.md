@@ -55,13 +55,13 @@ http://127.0.0.1:8000
 src/game/api/TownBackendClient.ts
 ```
 
-如果生产环境把贴图和音频放到 OSS，请在构建时设置：
+生产环境默认从同域静态目录加载贴图和音频：
 
 ```bash
-VITE_ASSET_BASE_URL=https://your-bucket.oss-cn-region.aliyuncs.com/assets/files
+VITE_ASSET_BASE_URL=/assets/files
 ```
 
-OSS 中需要保留这些目录：
+服务器静态目录中需要保留这些目录：
 
 ```text
 audio/
