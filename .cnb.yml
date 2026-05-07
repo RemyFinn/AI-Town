@@ -1,0 +1,29 @@
+.ai_town_pipeline: &ai_town_pipeline
+  name: build-and-deploy
+  docker:
+    image: node:22-bookworm
+    volumes:
+      - /root/.npm:copy-on-write
+  stages:
+    - name: install frontend dependencies
+      script: npm ci
+
+    - name: build frontend
+      script: |
+        export VITE_API_BASE_URL="${VITE_API_BASE_URL:-/api}"
+        npm run build
+
+    - name: check backend syntax
+      image: python:3.12-slim
+      script: python -m compileall backend/*.py
+
+    - name: deploy to server
+      if: test "${DEPLOY_ENABLED:-false}" = "true"
+      script: |
+        apt-get update
+        apt-get install -y --no-install-recommends ca-certificates openssh-client tar
+        bash deploy/deploy.sh
+
+"**":
+  push:
+    - *ai_town_pipeline
