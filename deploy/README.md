@@ -10,10 +10,10 @@ By default, the pipeline only builds and checks syntax. Deployment is disabled u
 
 ## 2. Prepare the server once
 
-Use Ubuntu 22.04 or 24.04. Copy the repository to the server, or copy only `deploy/server-bootstrap.sh`, then run:
+Use Ubuntu 22.04/24.04 or Alibaba Cloud Linux. Copy the repository to the server, or copy only `deploy/server-bootstrap.sh`, then run:
 
 ```bash
-sudo DEPLOY_USER=ubuntu APP_DIR=/opt/ai-town SERVER_NAME=your-domain.com bash deploy/server-bootstrap.sh
+sudo DEPLOY_USER=root APP_DIR=/opt/ai-town SERVER_NAME=your-domain.com bash deploy/server-bootstrap.sh
 ```
 
 The script installs Nginx, creates a systemd service named `ai-town-backend`, and prepares `/opt/ai-town`.
@@ -32,7 +32,7 @@ Set these variables in CNB's secret/environment variable settings:
 DEPLOY_ENABLED=true
 DEPLOY_HOST=your-server-ip
 DEPLOY_PORT=22
-DEPLOY_USER=ubuntu
+DEPLOY_USER=root
 APP_DIR=/opt/ai-town
 SSH_PRIVATE_KEY=<private deploy key>
 VITE_API_BASE_URL=/api
@@ -68,7 +68,7 @@ Backend API: http://your-domain.com/api/
 The deployment keeps game assets out of Git. Upload them once to the server's shared static directory:
 
 ```bash
-rsync -av src/game/assets/files/ ubuntu@your-server-ip:/opt/ai-town/shared/assets/files/
+rsync -av src/game/assets/files/ root@your-server-ip:/opt/ai-town/shared/assets/files/
 ```
 
 The server bootstrap config exposes that directory through Nginx:
