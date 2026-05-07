@@ -55,6 +55,20 @@ http://127.0.0.1:8000
 src/game/api/TownBackendClient.ts
 ```
 
+如果生产环境把贴图和音频放到 OSS，请在构建时设置：
+
+```bash
+VITE_ASSET_BASE_URL=https://your-bucket.oss-cn-region.aliyuncs.com/assets/files
+```
+
+OSS 中需要保留这些目录：
+
+```text
+audio/
+characters/
+interiors/
+```
+
 ## 3. 生产构建
 
 ```bash
@@ -73,4 +87,4 @@ npm run preview
 
 - 前端空白：先运行 `npm run build` 检查 TypeScript 和 Vite 构建错误。
 - 无法对话：确认后端正在运行，并访问 `http://127.0.0.1:8000/docs` 检查接口是否可用。
-- 资源加载失败：确认 `src/game/assets/files/` 下存在 `audio/`、`characters/` 和 `interiors/` 三个目录。
+- 资源加载失败：本地确认 `src/game/assets/files/` 下存在 `audio/`、`characters/` 和 `interiors/` 三个目录；生产环境确认 `VITE_ASSET_BASE_URL` 指向的 OSS 目录存在这些文件。

@@ -1,13 +1,3 @@
-import bgmAudio from "./files/audio/BGM.ogg";
-import runningAudio from "./files/audio/Running.mp3";
-import interactAudio from "./files/audio/interact.mp3";
-import playerSheet from "./files/characters/character_1.png";
-import npcZhangSheet from "./files/characters/character_2.png";
-import npcLiSheet from "./files/characters/character_3.png";
-import npcWangSheet from "./files/characters/character_4.png";
-import officeBackground from "./files/interiors/Japanese_Home_1_preview_48x48.png";
-import whaleDecoration from "./files/interiors/小鲸鱼.png";
-
 export type ActorAnimationKey =
   | "idle"
   | "walk_down"
@@ -57,26 +47,29 @@ const strip = (
     rect(startX + index * width, y, width, height),
   );
 
+const ASSET_BASE_URL = (import.meta.env.VITE_ASSET_BASE_URL ?? "/assets/files").replace(/\/$/, "");
+const assetUrl = (path: string): string => `${ASSET_BASE_URL}/${path}`;
+
 export const STATIC_ASSETS = {
   background: {
     key: "office-background",
-    source: officeBackground,
+    source: assetUrl("interiors/Japanese_Home_1_preview_48x48.png"),
   },
   whale: {
     key: "office-whale",
-    source: whaleDecoration,
+    source: assetUrl("interiors/小鲸鱼.png"),
   },
   bgm: {
     key: "town-bgm",
-    source: bgmAudio,
+    source: assetUrl("audio/BGM.ogg"),
   },
   interact: {
     key: "player-interact",
-    source: interactAudio,
+    source: assetUrl("audio/interact.mp3"),
   },
   running: {
     key: "player-running",
-    source: runningAudio,
+    source: assetUrl("audio/Running.mp3"),
   },
 } as const;
 
@@ -84,7 +77,7 @@ export const ACTOR_SPRITES: Record<string, ActorSpriteDefinition> = {
   player: {
     key: "player",
     textureKey: "actor-player",
-    source: playerSheet,
+    source: assetUrl("characters/character_1.png"),
     origin: { x: 0.5, y: 0.86 },
     defaultAnimation: "idle",
     animations: [
@@ -98,7 +91,7 @@ export const ACTOR_SPRITES: Record<string, ActorSpriteDefinition> = {
   npcZhang: {
     key: "npc-zhang",
     textureKey: "actor-npc-zhang",
-    source: npcZhangSheet,
+    source: assetUrl("characters/character_2.png"),
     origin: { x: 0.5, y: 0.88 },
     defaultAnimation: "idle",
     animations: [
@@ -112,7 +105,7 @@ export const ACTOR_SPRITES: Record<string, ActorSpriteDefinition> = {
   npcLi: {
     key: "npc-li",
     textureKey: "actor-npc-li",
-    source: npcLiSheet,
+    source: assetUrl("characters/character_3.png"),
     origin: { x: 0.5, y: 0.88 },
     defaultAnimation: "idle",
     animations: [
@@ -126,7 +119,7 @@ export const ACTOR_SPRITES: Record<string, ActorSpriteDefinition> = {
   npcWang: {
     key: "npc-wang",
     textureKey: "actor-npc-wang",
-    source: npcWangSheet,
+    source: assetUrl("characters/character_4.png"),
     origin: { x: 0.5, y: 0.88 },
     defaultAnimation: "default",
     animations: [
