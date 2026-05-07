@@ -15,15 +15,28 @@ if command -v apt-get >/dev/null 2>&1; then
   apt-get update
   apt-get install -y --no-install-recommends nginx python3 python3-venv python3-pip rsync ca-certificates sudo
 elif command -v dnf >/dev/null 2>&1; then
-  dnf install -y nginx python3 python3-pip rsync ca-certificates sudo
+  dnf module enable -y python38 || true
+  dnf install -y nginx python38 python38-pip python3 python3-pip rsync ca-certificates sudo
 elif command -v yum >/dev/null 2>&1; then
-  yum install -y nginx python3 python3-pip rsync ca-certificates sudo
+  yum module enable -y python38 || true
+  yum install -y nginx python38 python38-pip python3 python3-pip rsync ca-certificates sudo
 else
   echo "No supported package manager found. Install nginx, python3, pip, rsync, ca-certificates, and sudo manually." >&2
   exit 1
 fi
 
 id "$DEPLOY_USER" >/dev/null
+
+PYTHON_BIN="${PYTHON_BIN:-}"
+if [[ -z "${PYTHON_BIN}" ]]; then
+  if command -v python3.12 >/dev/null 2>&1; then
+    PYTHON_BIN="$(command -v python3.12)"
+  elif command -v python3.8 >/dev/null 2>&1; then
+    PYTHON_BIN="$(command -v python3.8)"
+  else
+    PYTHON_BIN="$(command -v python3)"
+  fi
+fi
 
 mkdir -p "${APP_DIR}/releases" "${APP_DIR}/shared/assets/files"
 chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "${APP_DIR}"

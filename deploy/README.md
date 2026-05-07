@@ -34,6 +34,7 @@ DEPLOY_HOST=your-server-ip
 DEPLOY_PORT=22
 DEPLOY_USER=root
 APP_DIR=/opt/ai-town
+PYTHON_BIN=/usr/bin/python3.12
 SSH_PRIVATE_KEY=<private deploy key>
 VITE_API_BASE_URL=/api
 VITE_ASSET_BASE_URL=/assets/files

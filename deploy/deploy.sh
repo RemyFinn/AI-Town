@@ -48,7 +48,7 @@ SSH_OPTS=(-p "$DEPLOY_PORT" -o StrictHostKeyChecking=yes)
 scp "${SSH_OPTS[@]}" "$PACKAGE_PATH" "${SSH_TARGET}:${REMOTE_PACKAGE}"
 
 ssh "${SSH_OPTS[@]}" "$SSH_TARGET" \
-  "APP_DIR='${APP_DIR}' RELEASE_ID='${RELEASE_ID}' REMOTE_PACKAGE='${REMOTE_PACKAGE}' bash -s" <<'REMOTE_SCRIPT'
+  "APP_DIR='${APP_DIR}' RELEASE_ID='${RELEASE_ID}' REMOTE_PACKAGE='${REMOTE_PACKAGE}' PYTHON_BIN='${PYTHON_BIN:-}' bash -s" <<'REMOTE_SCRIPT'
 set -euo pipefail
 
 release_dir="${APP_DIR}/releases/${RELEASE_ID}"
@@ -57,7 +57,15 @@ tar -xzf "${REMOTE_PACKAGE}" -C "${release_dir}"
 rm -f "${REMOTE_PACKAGE}"
 
 if [[ ! -d "${APP_DIR}/venv" ]]; then
-  python3 -m venv "${APP_DIR}/venv"
+  if [[ -n "${PYTHON_BIN:-}" ]]; then
+    "${PYTHON_BIN}" -m venv "${APP_DIR}/venv"
+  elif command -v python3.12 >/dev/null 2>&1; then
+    python3.12 -m venv "${APP_DIR}/venv"
+  elif command -v python3.8 >/dev/null 2>&1; then
+    python3.8 -m venv "${APP_DIR}/venv"
+  else
+    python3 -m venv "${APP_DIR}/venv"
+  fi
 fi
 
 "${APP_DIR}/venv/bin/pip" install --upgrade pip
@@ -74,4 +82,3 @@ fi
 REMOTE_SCRIPT
 
 echo "Deployed ${RELEASE_ID} to ${DEPLOY_HOST}:${APP_DIR}"
-
