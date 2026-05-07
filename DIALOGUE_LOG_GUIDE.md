@@ -340,13 +340,19 @@ backend/logs/dialogue_2025-01-15.log
 ### 步骤1: 启动后端服务
 
 ```bash
-cd code/chapter15/backend
+cd backend
 python main.py
 ```
 
-### 步骤2: 运行Godot游戏
+### 步骤2: 运行 Phaser Web 客户端
 
-在Godot编辑器中运行游戏
+在另一个终端窗口启动前端：
+
+```bash
+npm run dev
+```
+
+然后打开 Vite 输出的本地地址，通常是 `http://127.0.0.1:5173`。
 
 ### 步骤3: 与NPC对话
 
@@ -360,11 +366,10 @@ python main.py
 **选项B: 查看日志文件**
 ```bash
 # 在另一个终端窗口
-cd code/chapter15/backend
+cd backend
 python view_logs.py tail
 ```
 
 ---
 
 **祝你使用愉快!** 🎮✨📝
-

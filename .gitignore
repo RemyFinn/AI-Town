@@ -26,3 +26,6 @@ __pycache__/
 backend/venv/
 backend/logs/
 backend/memory_data/
+
+# externally hosted game assets
+src/game/assets/files/
