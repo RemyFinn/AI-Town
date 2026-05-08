@@ -59,7 +59,7 @@ const describeFetchError = (error: unknown): string => {
 export class TownBackendClient {
   readonly apiBaseUrl: string;
 
-  constructor(apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000") {
+  constructor(apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api") {
     this.apiBaseUrl = apiBaseUrl.replace(/\/$/, "");
   }
 

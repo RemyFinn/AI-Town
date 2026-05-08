@@ -15,6 +15,10 @@ export default defineConfig({
       allow: [projectRoot, localAssetDirectory],
     },
     proxy: {
+      "/api": {
+        target: "http://127.0.0.1:8000",
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
       "/assets/files": {
         target: "http://127.0.0.1:5173",
         rewrite: (path) => `/@fs${localAssetDirectory}${path.replace(/^\/assets\/files/, "")}`,
