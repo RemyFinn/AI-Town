@@ -27,8 +27,10 @@ fi
 
 mkdir -p "$HOME/.ssh"
 chmod 700 "$HOME/.ssh"
-printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/id_ed25519"
-chmod 600 "$HOME/.ssh/id_ed25519"
+key_file="$(mktemp)"
+trap 'rm -f "$key_file" "$PACKAGE_PATH"' EXIT
+printf '%s\n' "$SSH_PRIVATE_KEY" > "$key_file"
+chmod 600 "$key_file"
 
 if [[ -n "${SSH_KNOWN_HOSTS:-}" ]]; then
   printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
@@ -43,9 +45,10 @@ tar -czf "$PACKAGE_PATH" \
   backend/requirements.txt
 
 SSH_TARGET="${DEPLOY_USER}@${DEPLOY_HOST}"
-SSH_OPTS=(-p "$DEPLOY_PORT" -o StrictHostKeyChecking=yes)
+SSH_OPTS=(-i "$key_file" -o IdentitiesOnly=yes -p "$DEPLOY_PORT" -o StrictHostKeyChecking=yes)
+SCP_OPTS=(-i "$key_file" -o IdentitiesOnly=yes -P "$DEPLOY_PORT" -o StrictHostKeyChecking=yes)
 
-scp "${SSH_OPTS[@]}" "$PACKAGE_PATH" "${SSH_TARGET}:${REMOTE_PACKAGE}"
+scp "${SCP_OPTS[@]}" "$PACKAGE_PATH" "${SSH_TARGET}:${REMOTE_PACKAGE}"
 
 ssh "${SSH_OPTS[@]}" "$SSH_TARGET" \
   "APP_DIR='${APP_DIR}' RELEASE_ID='${RELEASE_ID}' REMOTE_PACKAGE='${REMOTE_PACKAGE}' PYTHON_BIN='${PYTHON_BIN:-}' bash -s" <<'REMOTE_SCRIPT'
