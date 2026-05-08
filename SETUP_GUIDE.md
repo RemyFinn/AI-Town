@@ -22,9 +22,9 @@ python main.py
 ```env
 API_HOST=0.0.0.0
 API_PORT=8000
-LLM_API_KEY=sk-your-api-key-here
-LLM_BASE_URL=https://api.openai.com/v1
-LLM_MODEL=gpt-4
+LLM_API_KEY=your-qwen-api-key
+LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+LLM_MODEL_ID=qwen-plus
 NPC_UPDATE_INTERVAL=30
 ```
 

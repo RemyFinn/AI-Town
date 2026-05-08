@@ -182,7 +182,7 @@ class NPCAgentManager:
         if agent is None:
             # 模拟模式回复
             role = NPC_ROLES[npc_name]
-            return f"你好!我是{npc_name},一名{role['title']}。(当前为模拟模式,请配置API_KEY以启用AI对话)"
+            return f"你好!我是{npc_name},一名{role['title']}。(当前为模拟模式,请配置LLM_API_KEY以启用AI对话)"
 
         try:
             # 记录对话开始 ⭐ 使用日志系统
@@ -484,4 +484,3 @@ def get_npc_manager() -> NPCAgentManager:
     if _npc_manager is None:
         _npc_manager = NPCAgentManager()
     return _npc_manager
-

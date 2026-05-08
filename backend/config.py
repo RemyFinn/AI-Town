@@ -21,9 +21,9 @@ class Settings:
     
     # LLM配置 (从环境变量读取)
     # HelloAgents框架使用自定义LLM配置,不需要OPENAI_API_KEY
-    LLM_MODEL_ID: str = os.getenv("LLM_MODEL_ID", "Qwen/Qwen2.5-72B-Instruct")
+    LLM_MODEL_ID: str = os.getenv("LLM_MODEL_ID", "qwen-plus")
     LLM_API_KEY: Optional[str] = os.getenv("LLM_API_KEY")
-    LLM_BASE_URL: str = os.getenv("LLM_BASE_URL", "https://api-inference.modelscope.cn/v1/")
+    LLM_BASE_URL: str = os.getenv("LLM_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
 
     # CORS配置
     CORS_ORIGINS = ["*"]  # 生产环境应限制具体域名
@@ -43,4 +43,3 @@ class Settings:
         return True
 
 settings = Settings()
-
