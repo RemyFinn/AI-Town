@@ -51,9 +51,9 @@ if [[ -n "${LLM_API_KEY:-}" ]]; then
   backend_env_file="$(mktemp)"
   chmod 600 "$backend_env_file"
   {
-    printf 'LLM_MODEL_ID=%s\n' "${LLM_MODEL_ID:-Qwen/Qwen2.5-72B-Instruct}"
+    printf 'LLM_MODEL_ID=%s\n' "${LLM_MODEL_ID:-qwen-plus}"
     printf 'LLM_API_KEY=%s\n' "$LLM_API_KEY"
-    printf 'LLM_BASE_URL=%s\n' "${LLM_BASE_URL:-https://api-inference.modelscope.cn/v1/}"
+    printf 'LLM_BASE_URL=%s\n' "${LLM_BASE_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1}"
   } > "$backend_env_file"
 fi
 

@@ -45,9 +45,9 @@ if [[ ! -f "${APP_DIR}/shared/backend.env" ]]; then
   cat > "${APP_DIR}/shared/backend.env" <<'ENV_FILE'
 # Fill these values on the server. The service still starts in fallback mode
 # when LLM_API_KEY is empty.
-LLM_MODEL_ID=Qwen/Qwen2.5-72B-Instruct
+LLM_MODEL_ID=qwen-plus
 LLM_API_KEY=
-LLM_BASE_URL=https://api-inference.modelscope.cn/v1/
+LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 ENV_FILE
   chown "${DEPLOY_USER}:${DEPLOY_USER}" "${APP_DIR}/shared/backend.env"
   chmod 600 "${APP_DIR}/shared/backend.env"
