@@ -6,7 +6,7 @@ This project uses CNB to build the Phaser/Vite frontend and optionally deploy th
 
 Push this repository to CNB. CNB reads `.cnb.yml` from the repository root and runs the pipeline on `push`.
 
-By default, the pipeline only builds and checks syntax. Deployment is disabled until `DEPLOY_ENABLED=true` is configured.
+By default, the pipeline builds, checks syntax, and deploys. To skip deployment for a push, set `DEPLOY_ENABLED=false`.
 
 ## 2. Prepare the server once
 
@@ -45,6 +45,11 @@ Optional but recommended:
 ```text
 SSH_KNOWN_HOSTS=<output of ssh-keyscan your-server-ip>
 ```
+
+`DEPLOY_ENABLED` is optional:
+
+- `DEPLOY_ENABLED=true` (or unset): run deployment.
+- `DEPLOY_ENABLED=false`: skip the `deploy to server` stage.
 
 ## 4. Deploy
 

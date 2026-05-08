@@ -19,7 +19,7 @@
       script: python -m compileall backend/*.py
 
     - name: deploy to server
-      if: test "${DEPLOY_ENABLED:-false}" = "true"
+      if: test "${DEPLOY_ENABLED:-true}" != "false"
       script: |
         apt-get update
         apt-get install -y --no-install-recommends ca-certificates openssh-client tar
