@@ -28,7 +28,8 @@ fi
 mkdir -p "$HOME/.ssh"
 chmod 700 "$HOME/.ssh"
 key_file="$(mktemp)"
-trap 'rm -f "$key_file" "$PACKAGE_PATH"' EXIT
+backend_env_file=""
+trap 'rm -f "$key_file" "$PACKAGE_PATH" ${backend_env_file:+"$backend_env_file"}' EXIT
 printf '%s\n' "$SSH_PRIVATE_KEY" > "$key_file"
 chmod 600 "$key_file"
 
@@ -44,20 +45,40 @@ tar -czf "$PACKAGE_PATH" \
   backend/*.py \
   backend/requirements.txt
 
+REMOTE_BACKEND_ENV="/tmp/ai-town-backend-${RELEASE_ID}.env"
+
+if [[ -n "${LLM_API_KEY:-}" ]]; then
+  backend_env_file="$(mktemp)"
+  chmod 600 "$backend_env_file"
+  {
+    printf 'LLM_MODEL_ID=%s\n' "${LLM_MODEL_ID:-Qwen/Qwen2.5-72B-Instruct}"
+    printf 'LLM_API_KEY=%s\n' "$LLM_API_KEY"
+    printf 'LLM_BASE_URL=%s\n' "${LLM_BASE_URL:-https://api-inference.modelscope.cn/v1/}"
+  } > "$backend_env_file"
+fi
+
 SSH_TARGET="${DEPLOY_USER}@${DEPLOY_HOST}"
 SSH_OPTS=(-i "$key_file" -o IdentitiesOnly=yes -p "$DEPLOY_PORT" -o StrictHostKeyChecking=yes)
 SCP_OPTS=(-i "$key_file" -o IdentitiesOnly=yes -P "$DEPLOY_PORT" -o StrictHostKeyChecking=yes)
 
 scp "${SCP_OPTS[@]}" "$PACKAGE_PATH" "${SSH_TARGET}:${REMOTE_PACKAGE}"
+if [[ -n "$backend_env_file" ]]; then
+  scp "${SCP_OPTS[@]}" "$backend_env_file" "${SSH_TARGET}:${REMOTE_BACKEND_ENV}"
+fi
 
 ssh "${SSH_OPTS[@]}" "$SSH_TARGET" \
-  "APP_DIR='${APP_DIR}' RELEASE_ID='${RELEASE_ID}' REMOTE_PACKAGE='${REMOTE_PACKAGE}' PYTHON_BIN='${PYTHON_BIN:-}' bash -s" <<'REMOTE_SCRIPT'
+  "APP_DIR='${APP_DIR}' RELEASE_ID='${RELEASE_ID}' REMOTE_PACKAGE='${REMOTE_PACKAGE}' REMOTE_BACKEND_ENV='${REMOTE_BACKEND_ENV}' PYTHON_BIN='${PYTHON_BIN:-}' bash -s" <<'REMOTE_SCRIPT'
 set -euo pipefail
 
 release_dir="${APP_DIR}/releases/${RELEASE_ID}"
 mkdir -p "${release_dir}" "${APP_DIR}/shared"
 tar -xzf "${REMOTE_PACKAGE}" -C "${release_dir}"
 rm -f "${REMOTE_PACKAGE}"
+
+if [[ -f "${REMOTE_BACKEND_ENV}" ]]; then
+  install -m 600 "${REMOTE_BACKEND_ENV}" "${APP_DIR}/shared/backend.env"
+  rm -f "${REMOTE_BACKEND_ENV}"
+fi
 
 if [[ ! -d "${APP_DIR}/venv" ]]; then
   if [[ -n "${PYTHON_BIN:-}" ]]; then

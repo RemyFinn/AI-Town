@@ -36,6 +36,7 @@ DEPLOY_USER=root
 APP_DIR=/opt/ai-town
 PYTHON_BIN=/usr/bin/python3.12
 SSH_PRIVATE_KEY=<private deploy key>
+LLM_API_KEY=<your llm api key>
 VITE_API_BASE_URL=/api
 VITE_ASSET_BASE_URL=/assets/files
 ```
@@ -50,6 +51,8 @@ SSH_KNOWN_HOSTS=<output of ssh-keyscan your-server-ip>
 
 - `DEPLOY_ENABLED=true` (or unset): run deployment.
 - `DEPLOY_ENABLED=false`: skip the `deploy to server` stage.
+
+`LLM_API_KEY` should be configured as a secret/masked variable. During deployment, the pipeline writes it to `${APP_DIR}/shared/backend.env` on the server with `600` permissions. The key should never be committed to Git.
 
 ## 4. Deploy
 
