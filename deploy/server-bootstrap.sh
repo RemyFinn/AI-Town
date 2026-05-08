@@ -11,10 +11,32 @@ APP_DIR="${APP_DIR:-/opt/ai-town}"
 SERVER_NAME="${SERVER_NAME:-_}"
 BACKEND_PORT="${BACKEND_PORT:-8000}"
 
-apt-get update
-apt-get install -y --no-install-recommends nginx python3 python3-venv python3-pip rsync ca-certificates
+if command -v apt-get >/dev/null 2>&1; then
+  apt-get update
+  apt-get install -y --no-install-recommends nginx python3 python3-venv python3-pip rsync ca-certificates sudo
+elif command -v dnf >/dev/null 2>&1; then
+  dnf module enable -y python38 || true
+  dnf install -y nginx python38 python38-pip python3 python3-pip rsync ca-certificates sudo
+elif command -v yum >/dev/null 2>&1; then
+  yum module enable -y python38 || true
+  yum install -y nginx python38 python38-pip python3 python3-pip rsync ca-certificates sudo
+else
+  echo "No supported package manager found. Install nginx, python3, pip, rsync, ca-certificates, and sudo manually." >&2
+  exit 1
+fi
 
 id "$DEPLOY_USER" >/dev/null
+
+PYTHON_BIN="${PYTHON_BIN:-}"
+if [[ -z "${PYTHON_BIN}" ]]; then
+  if command -v python3.12 >/dev/null 2>&1; then
+    PYTHON_BIN="$(command -v python3.12)"
+  elif command -v python3.8 >/dev/null 2>&1; then
+    PYTHON_BIN="$(command -v python3.8)"
+  else
+    PYTHON_BIN="$(command -v python3)"
+  fi
+fi
 
 mkdir -p "${APP_DIR}/releases" "${APP_DIR}/shared/assets/files"
 chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "${APP_DIR}"
@@ -57,7 +79,16 @@ SUDOERS_FILE
 chmod 440 /etc/sudoers.d/ai-town-deploy
 visudo -cf /etc/sudoers.d/ai-town-deploy
 
-cat > /etc/nginx/sites-available/ai-town.conf <<NGINX_FILE
+if [[ -d /etc/nginx/sites-available ]]; then
+  nginx_conf_path="/etc/nginx/sites-available/ai-town.conf"
+  nginx_enable_path="/etc/nginx/sites-enabled/ai-town.conf"
+else
+  mkdir -p /etc/nginx/conf.d
+  nginx_conf_path="/etc/nginx/conf.d/ai-town.conf"
+  nginx_enable_path=""
+fi
+
+cat > "${nginx_conf_path}" <<NGINX_FILE
 server {
     listen 80;
     server_name ${SERVER_NAME};
@@ -88,8 +119,10 @@ server {
 }
 NGINX_FILE
 
-ln -sfn /etc/nginx/sites-available/ai-town.conf /etc/nginx/sites-enabled/ai-town.conf
-rm -f /etc/nginx/sites-enabled/default
+if [[ -n "${nginx_enable_path}" ]]; then
+  ln -sfn "${nginx_conf_path}" "${nginx_enable_path}"
+  rm -f /etc/nginx/sites-enabled/default
+fi
 
 systemctl daemon-reload
 systemctl enable ai-town-backend

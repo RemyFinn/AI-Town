@@ -23,6 +23,12 @@ export class BootScene extends Phaser.Scene {
       loadingText.setText(`正在加载 Phaser 客户端… ${Math.round(value * 100)}%`);
     });
 
+    this.load.on("loaderror", (file: { key?: string }) => {
+      loadingText.setText(
+        `资源加载失败：${file.key ?? "unknown"}\n请确认 /assets/files 静态目录可访问。`,
+      );
+    });
+
     this.load.image(STATIC_ASSETS.background.key, STATIC_ASSETS.background.source);
     this.load.image(STATIC_ASSETS.whale.key, STATIC_ASSETS.whale.source);
     this.load.audio(STATIC_ASSETS.bgm.key, STATIC_ASSETS.bgm.source);
@@ -35,6 +41,11 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
+    const failedFiles = this.load.totalFailed;
+    if (failedFiles > 0) {
+      return;
+    }
+
     registerSpriteDefinitions(this);
     this.scene.start("TownScene");
   }
