@@ -4,6 +4,10 @@
     image: node:22-bookworm
     volumes:
       - /root/.npm:copy-on-write
+  imports:
+    - https://cnb.cool/Azem.Finn/Pixel_House_Secrets/-/blob/main/ai-town-prod.yml
+  env:
+    DEPLOY_HOST: 47.111.178.141
   stages:
     - name: install frontend dependencies
       script: npm ci
