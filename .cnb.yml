@@ -24,6 +24,9 @@
         apt-get update
         apt-get install -y --no-install-recommends ca-certificates openssh-client tar
         bash deploy/deploy.sh
+      environment:
+        variables:
+          DEPLOY_HOST: 47.111.178.141
 
 "**":
   push:
