@@ -16,6 +16,10 @@ done
 
 DEPLOY_PORT="${DEPLOY_PORT:-22}"
 APP_DIR="${APP_DIR:-/opt/ai-town}"
+MEMORY_STORAGE_PATH="${MEMORY_STORAGE_PATH:-${APP_DIR}/shared/memory_data}"
+RELOAD_SYSTEM_NGINX="${RELOAD_SYSTEM_NGINX:-false}"
+SYNC_ONEPANEL_SITE="${SYNC_ONEPANEL_SITE:-true}"
+ONEPANEL_SITE_DIR="${ONEPANEL_SITE_DIR:-/opt/1panel/apps/openresty/openresty/www/sites/ai-town/index}"
 RELEASE_ID="${CNB_COMMIT:-$(date +%Y%m%d%H%M%S)}"
 PACKAGE_PATH="/tmp/ai-town-${RELEASE_ID}.tar.gz"
 REMOTE_PACKAGE="/tmp/ai-town-${RELEASE_ID}.tar.gz"
@@ -79,11 +83,11 @@ if [[ -n "$backend_env_file" ]]; then
 fi
 
 ssh "${SSH_OPTS[@]}" "$SSH_TARGET" \
-  "APP_DIR='${APP_DIR}' RELEASE_ID='${RELEASE_ID}' REMOTE_PACKAGE='${REMOTE_PACKAGE}' REMOTE_BACKEND_ENV='${REMOTE_BACKEND_ENV}' PYTHON_BIN='${PYTHON_BIN:-}' bash -s" <<'REMOTE_SCRIPT'
+  "APP_DIR='${APP_DIR}' RELEASE_ID='${RELEASE_ID}' REMOTE_PACKAGE='${REMOTE_PACKAGE}' REMOTE_BACKEND_ENV='${REMOTE_BACKEND_ENV}' PYTHON_BIN='${PYTHON_BIN:-}' MEMORY_STORAGE_PATH='${MEMORY_STORAGE_PATH}' RELOAD_SYSTEM_NGINX='${RELOAD_SYSTEM_NGINX}' SYNC_ONEPANEL_SITE='${SYNC_ONEPANEL_SITE}' ONEPANEL_SITE_DIR='${ONEPANEL_SITE_DIR}' bash -s" <<'REMOTE_SCRIPT'
 set -euo pipefail
 
 release_dir="${APP_DIR}/releases/${RELEASE_ID}"
-mkdir -p "${release_dir}" "${APP_DIR}/shared"
+mkdir -p "${release_dir}" "${APP_DIR}/shared/assets/files" "${APP_DIR}/shared/memory_data"
 tar -xzf "${REMOTE_PACKAGE}" -C "${release_dir}"
 rm -f "${REMOTE_PACKAGE}"
 
@@ -91,6 +95,14 @@ if [[ -f "${REMOTE_BACKEND_ENV}" ]]; then
   install -m 600 "${REMOTE_BACKEND_ENV}" "${APP_DIR}/shared/backend.env"
   rm -f "${REMOTE_BACKEND_ENV}"
 fi
+
+touch "${APP_DIR}/shared/backend.env"
+if grep -q '^MEMORY_STORAGE_PATH=' "${APP_DIR}/shared/backend.env"; then
+  sed -i "s|^MEMORY_STORAGE_PATH=.*|MEMORY_STORAGE_PATH=${MEMORY_STORAGE_PATH}|" "${APP_DIR}/shared/backend.env"
+else
+  printf '\nMEMORY_STORAGE_PATH=%s\n' "${MEMORY_STORAGE_PATH}" >> "${APP_DIR}/shared/backend.env"
+fi
+chmod 600 "${APP_DIR}/shared/backend.env"
 
 if [[ ! -d "${APP_DIR}/venv" ]]; then
   if [[ -n "${PYTHON_BIN:-}" ]]; then
@@ -109,11 +121,33 @@ fi
 
 ln -sfn "${release_dir}" "${APP_DIR}/current"
 
+if [[ "${SYNC_ONEPANEL_SITE}" == "true" ]]; then
+  if [[ -d "${ONEPANEL_SITE_DIR}" ]]; then
+    if [[ "${ONEPANEL_SITE_DIR}" != /opt/1panel/apps/openresty/openresty/www/sites/*/index ]]; then
+      echo "Refusing to sync outside 1Panel site index: ${ONEPANEL_SITE_DIR}" >&2
+      exit 1
+    fi
+
+    if command -v rsync >/dev/null 2>&1; then
+      rsync -a --delete "${release_dir}/dist/" "${ONEPANEL_SITE_DIR}/"
+      mkdir -p "${ONEPANEL_SITE_DIR}/assets/files"
+      rsync -a --delete "${APP_DIR}/shared/assets/files/" "${ONEPANEL_SITE_DIR}/assets/files/"
+    else
+      echo "rsync not found; install rsync or set SYNC_ONEPANEL_SITE=false." >&2
+      exit 1
+    fi
+  else
+    echo "1Panel site directory not found, skipping frontend sync: ${ONEPANEL_SITE_DIR}" >&2
+  fi
+fi
+
 if command -v systemctl >/dev/null 2>&1; then
   sudo systemctl restart ai-town-backend
-  sudo systemctl reload nginx
+  if [[ "${RELOAD_SYSTEM_NGINX}" == "true" ]] && systemctl is-active --quiet nginx; then
+    sudo systemctl reload nginx
+  fi
 else
-  echo "systemctl not found; restart the backend and web server manually." >&2
+  echo "systemctl not found; restart the backend manually." >&2
 fi
 REMOTE_SCRIPT
 

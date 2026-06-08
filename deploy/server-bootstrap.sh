@@ -10,18 +10,31 @@ DEPLOY_USER="${DEPLOY_USER:-ubuntu}"
 APP_DIR="${APP_DIR:-/opt/ai-town}"
 SERVER_NAME="${SERVER_NAME:-_}"
 BACKEND_PORT="${BACKEND_PORT:-8000}"
+MANAGE_SYSTEM_NGINX="${MANAGE_SYSTEM_NGINX:-false}"
 
 if command -v apt-get >/dev/null 2>&1; then
   apt-get update
-  apt-get install -y --no-install-recommends nginx python3 python3-venv python3-pip rsync ca-certificates sudo
+  packages=(python3 python3-venv python3-pip rsync ca-certificates sudo)
+  if [[ "${MANAGE_SYSTEM_NGINX}" == "true" ]]; then
+    packages+=(nginx)
+  fi
+  apt-get install -y --no-install-recommends "${packages[@]}"
 elif command -v dnf >/dev/null 2>&1; then
   dnf module enable -y python38 || true
-  dnf install -y nginx python38 python38-pip python3 python3-pip rsync ca-certificates sudo
+  packages=(python38 python38-pip python3 python3-pip rsync ca-certificates sudo)
+  if [[ "${MANAGE_SYSTEM_NGINX}" == "true" ]]; then
+    packages+=(nginx)
+  fi
+  dnf install -y "${packages[@]}"
 elif command -v yum >/dev/null 2>&1; then
   yum module enable -y python38 || true
-  yum install -y nginx python38 python38-pip python3 python3-pip rsync ca-certificates sudo
+  packages=(python38 python38-pip python3 python3-pip rsync ca-certificates sudo)
+  if [[ "${MANAGE_SYSTEM_NGINX}" == "true" ]]; then
+    packages+=(nginx)
+  fi
+  yum install -y "${packages[@]}"
 else
-  echo "No supported package manager found. Install nginx, python3, pip, rsync, ca-certificates, and sudo manually." >&2
+  echo "No supported package manager found. Install python3, pip, rsync, ca-certificates, and sudo manually." >&2
   exit 1
 fi
 
@@ -38,7 +51,7 @@ if [[ -z "${PYTHON_BIN}" ]]; then
   fi
 fi
 
-mkdir -p "${APP_DIR}/releases" "${APP_DIR}/shared/assets/files"
+mkdir -p "${APP_DIR}/releases" "${APP_DIR}/shared/assets/files" "${APP_DIR}/shared/memory_data"
 chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "${APP_DIR}"
 
 if [[ ! -f "${APP_DIR}/shared/backend.env" ]]; then
@@ -48,6 +61,7 @@ if [[ ! -f "${APP_DIR}/shared/backend.env" ]]; then
 LLM_MODEL_ID=qwen-plus
 LLM_API_KEY=
 LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+MEMORY_STORAGE_PATH=/opt/ai-town/shared/memory_data
 ENV_FILE
   chown "${DEPLOY_USER}:${DEPLOY_USER}" "${APP_DIR}/shared/backend.env"
   chmod 600 "${APP_DIR}/shared/backend.env"
@@ -72,23 +86,31 @@ RestartSec=5
 WantedBy=multi-user.target
 SERVICE_FILE
 
-cat > /etc/sudoers.d/ai-town-deploy <<SUDOERS_FILE
+if [[ "${MANAGE_SYSTEM_NGINX}" == "true" ]]; then
+  cat > /etc/sudoers.d/ai-town-deploy <<SUDOERS_FILE
 ${DEPLOY_USER} ALL=(root) NOPASSWD: /bin/systemctl restart ai-town-backend, /bin/systemctl reload nginx
 ${DEPLOY_USER} ALL=(root) NOPASSWD: /usr/bin/systemctl restart ai-town-backend, /usr/bin/systemctl reload nginx
 SUDOERS_FILE
+else
+  cat > /etc/sudoers.d/ai-town-deploy <<SUDOERS_FILE
+${DEPLOY_USER} ALL=(root) NOPASSWD: /bin/systemctl restart ai-town-backend
+${DEPLOY_USER} ALL=(root) NOPASSWD: /usr/bin/systemctl restart ai-town-backend
+SUDOERS_FILE
+fi
 chmod 440 /etc/sudoers.d/ai-town-deploy
 visudo -cf /etc/sudoers.d/ai-town-deploy
 
-if [[ -d /etc/nginx/sites-available ]]; then
-  nginx_conf_path="/etc/nginx/sites-available/ai-town.conf"
-  nginx_enable_path="/etc/nginx/sites-enabled/ai-town.conf"
-else
-  mkdir -p /etc/nginx/conf.d
-  nginx_conf_path="/etc/nginx/conf.d/ai-town.conf"
-  nginx_enable_path=""
-fi
+if [[ "${MANAGE_SYSTEM_NGINX}" == "true" ]]; then
+  if [[ -d /etc/nginx/sites-available ]]; then
+    nginx_conf_path="/etc/nginx/sites-available/ai-town.conf"
+    nginx_enable_path="/etc/nginx/sites-enabled/ai-town.conf"
+  else
+    mkdir -p /etc/nginx/conf.d
+    nginx_conf_path="/etc/nginx/conf.d/ai-town.conf"
+    nginx_enable_path=""
+  fi
 
-cat > "${nginx_conf_path}" <<NGINX_FILE
+  cat > "${nginx_conf_path}" <<NGINX_FILE
 server {
     listen 80;
     server_name ${SERVER_NAME};
@@ -119,16 +141,19 @@ server {
 }
 NGINX_FILE
 
-if [[ -n "${nginx_enable_path}" ]]; then
-  ln -sfn "${nginx_conf_path}" "${nginx_enable_path}"
-  rm -f /etc/nginx/sites-enabled/default
+  if [[ -n "${nginx_enable_path}" ]]; then
+    ln -sfn "${nginx_conf_path}" "${nginx_enable_path}"
+    rm -f /etc/nginx/sites-enabled/default
+  fi
 fi
 
 systemctl daemon-reload
 systemctl enable ai-town-backend
-nginx -t
-systemctl enable --now nginx
-systemctl reload nginx
+if [[ "${MANAGE_SYSTEM_NGINX}" == "true" ]]; then
+  nginx -t
+  systemctl enable --now nginx
+  systemctl reload nginx
+fi
 
 echo "Server bootstrap complete."
-echo "Edit ${APP_DIR}/shared/backend.env, then push to CNB to deploy the first release."
+echo "Edit ${APP_DIR}/shared/backend.env, configure 1Panel/OpenResty for ${APP_DIR}/current/dist and /api, then push to CNB."

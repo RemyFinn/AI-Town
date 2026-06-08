@@ -22,7 +22,13 @@ CNB Runner
 sudo DEPLOY_USER=root APP_DIR=/opt/ai-town SERVER_NAME=_ bash deploy/server-bootstrap.sh
 ```
 
-这个脚本会安装 Nginx，创建 `ai-town-backend` systemd 服务，并准备 `/opt/ai-town` 目录。
+默认模式适配 1Panel/OpenResty：这个脚本只创建 `ai-town-backend` systemd 服务，并准备 `/opt/ai-town` 目录，不安装、不配置、不重载系统 Nginx。
+
+如果不用 1Panel/OpenResty，而是希望继续由脚本管理系统 Nginx，需要显式启用：
+
+```bash
+sudo MANAGE_SYSTEM_NGINX=true DEPLOY_USER=root APP_DIR=/opt/ai-town SERVER_NAME=_ bash deploy/server-bootstrap.sh
+```
 
 游戏资源文件不进 Git，需要手动上传到服务器共享静态目录：
 
@@ -30,15 +36,32 @@ sudo DEPLOY_USER=root APP_DIR=/opt/ai-town SERVER_NAME=_ bash deploy/server-boot
 rsync -av src/game/assets/files/ root@your-server-ip:/opt/ai-town/shared/assets/files/
 ```
 
+NPC 记忆数据会持久化到：
+
+```text
+/opt/ai-town/shared/memory_data
+```
+
 ## 2. 服务器运行结构
 
 生产服务器应保持这个结构：
 
 ```text
-Nginx            公开端口 :80，提供前端页面，并把 /api 转发给后端
+1Panel/OpenResty 公开端口 :80/:443，提供前端页面，并把 /api 转发给后端
 FastAPI/Uvicorn  本机端口 127.0.0.1:8000
 Qdrant           本机端口 127.0.0.1:6333
 ```
+
+1Panel/OpenResty 站点按下面方式创建：
+
+```text
+类型: 静态网站
+主域名: your-server-ip:18020
+代号: ai-town
+/api/ 反代: http://127.0.0.1:8000/
+```
+
+1Panel 会创建站点目录 `/opt/1panel/apps/openresty/openresty/www/sites/ai-town/index`。部署脚本默认会把 `dist/` 和 `/assets/files/` 自动同步到这个目录，所以不要手动修改其他 1Panel 站点。
 
 阿里云安全组不要开放这些内部端口：
 
@@ -63,6 +86,9 @@ DEPLOY_PORT: "22"
 DEPLOY_USER: "root"
 APP_DIR: "/opt/ai-town"
 PYTHON_BIN: "/usr/bin/python3.12"
+RELOAD_SYSTEM_NGINX: "false"
+SYNC_ONEPANEL_SITE: "true"
+ONEPANEL_SITE_DIR: "/opt/1panel/apps/openresty/openresty/www/sites/ai-town/index"
 
 VITE_API_BASE_URL: "/api"
 VITE_ASSET_BASE_URL: "/assets/files"
@@ -79,6 +105,7 @@ ALIBABA_CLOUD_SECURITY_GROUP_ID: "sg-xxxxxxxx"
 LLM_MODEL_ID: "qwen-plus"
 LLM_API_KEY: "your-llm-api-key"
 LLM_BASE_URL: "https://dashscope.aliyuncs.com/compatible-mode/v1/"
+MEMORY_STORAGE_PATH: "/opt/ai-town/shared/memory_data"
 
 QDRANT_URL: "http://localhost:6333"
 QDRANT_API_KEY: ""
@@ -133,15 +160,30 @@ backend/requirements.txt
 部署后的访问路径：
 
 ```text
-前端页面: http://your-domain-or-ip/
-后端 API: http://your-domain-or-ip/api/
-静态资源: http://your-domain-or-ip/assets/files/
+前端页面: http://your-domain-or-ip:18020/
+后端 API: http://your-domain-or-ip:18020/api/
+静态资源: http://your-domain-or-ip:18020/assets/files/
+```
+
+如果使用 1Panel/OpenResty 的静态网站，部署脚本默认会同步：
+
+```text
+dist/ -> /opt/1panel/apps/openresty/openresty/www/sites/ai-town/index/
+/opt/ai-town/shared/assets/files/ -> /opt/1panel/apps/openresty/openresty/www/sites/ai-town/index/assets/files/
+```
+
+部署脚本默认只重启 `ai-town-backend`。如果使用 1Panel/OpenResty，不要把 `RELOAD_SYSTEM_NGINX` 设为 `true`。只有在使用脚本管理系统 Nginx 时才需要设置：
+
+```yaml
+RELOAD_SYSTEM_NGINX: "true"
 ```
 
 ## 5. 运维注意事项
 
 - `DEPLOY_ENABLED=false` 可以跳过部署阶段，只跑构建检查。
 - 后端环境变量会写入服务器 `${APP_DIR}/shared/backend.env`，权限为 `600`。
+- `MEMORY_STORAGE_PATH` 会写入 `${APP_DIR}/shared/backend.env`，默认值为 `${APP_DIR}/shared/memory_data`，避免 NPC 记忆数据库落在每个 release 目录里。
+- `SYNC_ONEPANEL_SITE=true` 会把前端构建产物和游戏资源同步到 `ONEPANEL_SITE_DIR`。如果临时不想改 1Panel 站点目录，可以设为 `false`。
 - `SSH_PRIVATE_KEY`、阿里云 AccessKey、LLM Key、Embedding Key 只能放在 CNB 密钥仓库，不要提交到主仓库。
 - 如果 CNB 任务被强制中断，清理脚本可能来不及执行。可以在阿里云安全组里检查是否残留描述以 `ai-town-cnb-` 开头的临时规则。
-- HTTP 部署稳定后，再配置域名和 HTTPS，例如使用 Certbot。
+- HTTP 部署稳定后，在 1Panel/OpenResty 里配置域名和 HTTPS。

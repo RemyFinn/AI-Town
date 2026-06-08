@@ -14,6 +14,7 @@ from hello_agents import SimpleAgent, HelloAgentsLLM
 from hello_agents.memory import MemoryManager, MemoryConfig, MemoryItem
 from typing import Dict, List, Optional
 from datetime import datetime
+from config import settings
 from relationship_manager import RelationshipManager
 from logger import (
     log_dialogue_start, log_affinity, log_memory_retrieval,
@@ -144,7 +145,7 @@ class NPCAgentManager:
     def _create_memory_manager(self, npc_name: str) -> MemoryManager:
         """为NPC创建记忆管理器"""
         # 创建记忆存储目录
-        memory_dir = os.path.join(os.path.dirname(__file__), 'memory_data', npc_name)
+        memory_dir = os.path.join(settings.MEMORY_STORAGE_PATH, npc_name)
         os.makedirs(memory_dir, exist_ok=True)
 
         # 配置记忆系统

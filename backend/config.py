@@ -18,6 +18,10 @@ class Settings:
     
     # NPC配置
     NPC_UPDATE_INTERVAL = 30  # NPC状态更新间隔(秒)
+    MEMORY_STORAGE_PATH: str = os.getenv(
+        "MEMORY_STORAGE_PATH",
+        os.path.join(os.path.dirname(__file__), "memory_data")
+    )
     
     # LLM配置 (从环境变量读取)
     # HelloAgents框架使用自定义LLM配置,不需要OPENAI_API_KEY
